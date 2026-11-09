@@ -1,0 +1,24 @@
+{
+  "name": "consent-app",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev --workspace consent-api",
+    "dev:web": "npm run dev --workspace consent-web",
+    "build": "npm run build --workspace consent-api && npm run build --workspace consent-web",
+    "start": "concurrently -n api,web -c blue,green \"npm:start:api\" \"npm:start:web\"",
+    "start:api": "npm run start --workspace consent-api",
+    "start:web": "npm run start --workspace consent-web",
+    "test": "npm run test --workspace consent-api",
+    "lint": "npm run lint --workspace consent-web",
+    "db:migrate": "npm run db:migrate --workspace consent-api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
