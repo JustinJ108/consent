@@ -37,9 +37,13 @@ export default function ClientDetailPage() {
 
   const orgNameById = useMemo(() => {
     const map = new Map<string, string>();
+    // The organizations endpoint excludes the caller's own org (it powers the
+    // "grant consent to..." picker), but audit rows from the owning org still
+    // need a readable name.
+    if (me) map.set(me.org.id, me.org.name);
     for (const org of orgs) map.set(org.id, org.name);
     return map;
-  }, [orgs]);
+  }, [orgs, me]);
 
   const loadDetail = useCallback(async () => {
     const next = await api.getClient(id);

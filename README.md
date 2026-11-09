@@ -32,6 +32,33 @@ Then open **http://localhost:3000**.
   required.
 - Migrations run automatically on API startup.
 
+## Demo mode (for showing clients)
+
+The app ships with a fictional, pre-seeded dataset designed for live demos.
+
+```bash
+npm run demo:seed    # seed an empty database
+npm run demo:reset   # wipe the embedded DB and reseed from scratch
+```
+
+Then open http://localhost:3000 and use the one-click demo buttons:
+
+| Organization | Email | Password |
+|---|---|---|
+| Riverside Shelter | `admin@riverside.test` | `demo1234` |
+| Harbor Clinic | `admin@harbor.test` | `demo1234` |
+| Northside Legal Aid | `admin@northside.test` | `demo1234` |
+
+The dataset includes five fictional clients, a mix of active, expired, and
+revoked consents, and a backdated audit trail with both **allowed** and
+**denied** reads. For the clearest demo, open Riverside and Harbor in two
+separate windows: grant or revoke a consent in Riverside, refresh Harbor, and
+watch the category appear or disappear. Open a client as the Riverside admin
+to show the audit trail proving the denied reads.
+
+Run `npm run demo:reset` before each client meeting to get the same clean
+starting state every time.
+
 ### Try the multi-org flow
 
 The whole point is sharing *between* organizations, so you need two:
@@ -45,6 +72,59 @@ The whole point is sharing *between* organizations, so you need two:
    only the consented category is visible, read-only.
 5. Revoke the consent in window one; it disappears from window two — and
    every read/write attempt, allowed or denied, is in the audit log.
+
+## Deploying (Vercel + Neon)
+
+Locally the app uses embedded PGlite, which needs a persistent filesystem.
+In production it uses hosted Postgres (Neon) and the API runs as a Vercel
+serverless function. `backend/src/db/client.ts` switches automatically:
+if `DATABASE_URL` is set it uses Neon, otherwise it falls back to PGlite.
+
+### 1. Create the database (Neon)
+
+Create a Neon project and copy its connection string. Apply the schema once
+from your machine:
+
+```bash
+DATABASE_URL="postgresql://..." npm run db:migrate
+```
+
+Optionally load the demo dataset (or wipe and reseed a deployed demo — this
+deletes all rows):
+
+```bash
+DATABASE_URL="postgresql://..." npm run demo:seed    # empty database only
+DATABASE_URL="postgresql://..." npm run demo:reset   # truncate + reseed
+```
+
+### 2. Deploy the API as a Vercel project
+
+Import this repository into Vercel with **Root Directory = `backend`**.
+Vercel's zero-config Express detection finds the default export in
+`backend/src/app.ts` and runs the API as a single serverless function. Set
+these environment variables:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | your Neon connection string |
+| `JWT_SECRET` | a long random string |
+| `CORS_ORIGIN` | your web app URL, e.g. `https://consent-web.vercel.app` |
+
+Migrations are not run inside the serverless function; run
+`npm run db:migrate` (step 1) whenever the schema changes.
+
+### 3. Deploy the web app as a second Vercel project
+
+Import the same repository again with **Root Directory = `web`** and set:
+
+| Variable | Value |
+|---|---|
+| `API_ORIGIN` | your API URL, e.g. `https://consent-api.vercel.app` |
+
+The Next.js app proxies `/api/*` to `API_ORIGIN` (see `web/next.config.ts`).
+
+> Embedded PGlite and `backend/.data/` are local-only. On Vercel the API
+> refuses to start without `DATABASE_URL` because the filesystem is ephemeral.
 
 ## How the consent model works
 
@@ -72,6 +152,8 @@ Run from the repository root:
 | `npm test` | Run backend unit tests (no database needed) |
 | `npm run lint` | Lint the web app |
 | `npm run db:migrate` | Apply migrations manually |
+| `npm run demo:seed` | Seed the fictional demo dataset (empty DB only) |
+| `npm run demo:reset` | Wipe the embedded DB and reseed the demo dataset |
 | `npm run start` | Run both in production mode (after `build`) |
 
 Reset the local database at any time:

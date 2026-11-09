@@ -16,7 +16,9 @@
     "start:web": "npm run start --workspace consent-web",
     "test": "npm run test --workspace consent-api",
     "lint": "npm run lint --workspace consent-web",
-    "db:migrate": "npm run db:migrate --workspace consent-api"
+    "db:migrate": "npm run db:migrate --workspace consent-api",
+    "demo:seed": "npm run demo:seed --workspace consent-api",
+    "demo:reset": "npm run demo:reset --workspace consent-api"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

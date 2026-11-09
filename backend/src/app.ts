@@ -29,3 +29,7 @@ export function createApp() {
 
   return app;
 }
+
+// Vercel's zero-config Express detection looks for a default export from
+// app/index/server. Local development uses the named factory in index.ts.
+export default createApp();

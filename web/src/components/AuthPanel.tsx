@@ -36,24 +36,22 @@ export function AuthPanel() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 py-16">
-      <div className="flex flex-col gap-2 text-center">
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-          Consent Hub
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {mode === "login" ? "Sign in" : "Register an organization"}
-        </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Share client information across social-service organizations — only
-          with explicit, revocable consent, and always audited.
-        </p>
-      </div>
-
+    <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
       >
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg font-semibold tracking-tight">
+            {mode === "login" ? "Sign in" : "Register an organization"}
+          </h2>
+          {mode === "register" && (
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Create a new organization and become its first admin.
+            </p>
+          )}
+        </div>
+
         {mode === "register" && (
           <label className="flex flex-col gap-1 text-sm font-medium">
             Organization name

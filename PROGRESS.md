@@ -36,6 +36,21 @@ npm run dev        # API :4000, web :3000
 Web proxies `/api/*` → `http://localhost:4000`. Migrations run on API startup.
 Reset DB: `rm -rf backend/.data`.
 
+## Demo mode (showing clients)
+
+- `npm run demo:seed` — seeds an empty DB with 3 fictional orgs, 5 clients,
+  12 consents (active / expired / revoked) and a 96-entry backdated audit
+  trail containing both ALLOWED and DENIED reads.
+- `npm run demo:reset` — wipes `backend/.data` and reseeds, for a clean start
+  before each meeting.
+- Landing page has one-click sign-in buttons for each demo org.
+- Demo accounts (password `demo1234`): `admin@riverside.test`,
+  `admin@harbor.test`, `admin@northside.test`.
+- Suggested demo: Riverside + Harbor in two windows, grant/revoke a category,
+  then show the owner's access history with denied reads.
+- Seed data lives in `backend/src/db/seed.ts`; reset in `backend/src/db/reset.ts`;
+  accounts mirrored in `web/src/lib/demo.ts`.
+
 ## Key decisions / notes
 
 - Backend code is ported from `../consent-hub/backend`; the only substantive
@@ -46,8 +61,16 @@ Reset DB: `rm -rf backend/.data`.
   `GET /api/organizations` (needed by the UI).
 - Dev `JWT_SECRET` has a default in `backend/src/env.ts`; set a real one in
   `backend/.env` before deploying.
-- `consent/` is not yet a git repo (`git init` needed). `.gitignore` already
-  excludes `node_modules`, `.next`, `backend/dist`, `backend/.data`, `.env*`.
+- `consent/` is a git repo, committed and pushed to `origin/main`
+  (github.com/JustinJ108/consent). `.gitignore` excludes `node_modules`,
+  `.next`, `backend/dist`, `backend/.data`, `.env*`.
+- Deployment targets **Vercel + Neon**. `DATABASE_URL` switches the DB driver
+  to `@neondatabase/serverless` (`drizzle-orm/neon-http`); unset falls back to
+  embedded PGlite for local development. Vercel zero-config Express detection
+  uses the default export from `backend/src/app.ts`; local dev still runs
+  `src/index.ts` (migrations + listener). Migrations/seed are run out-of-band
+  against Neon with `DATABASE_URL=... npm run db:migrate|demo:seed|demo:reset`.
+  See README → "Deploying (Vercel + Neon)".
 
 ## Possible next steps
 
@@ -56,7 +79,7 @@ Reset DB: `rm -rf backend/.data`.
 - [ ] Let consented orgs propose write-backs with an approval workflow
 - [ ] Rate limiting + request logging middleware
 - [ ] Pagination/search on the client list
-- [ ] Deploy: swap PGlite for managed Postgres (`pg` driver) via env switch,
-      set real `JWT_SECRET`, host API + web
+- [x] Deploy: managed Postgres (Neon) via `DATABASE_URL`, API + web on Vercel
+      (set a real `JWT_SECRET` and `CORS_ORIGIN` in the Vercel dashboard)
 - [ ] Optional: integrate the `consent-aware-gateway` sanitizer as an
       "export for downstream system" feature on the client detail page
